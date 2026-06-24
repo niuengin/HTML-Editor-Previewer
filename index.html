@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <title>本地 HTML 编辑预览器</title>
@@ -245,10 +246,7 @@
           <button id="hidePreviewBtn">收起</button>
         </div>
         <div class="panel-body">
-          <iframe
-            id="preview"
-            sandbox="allow-scripts allow-forms allow-modals allow-popups"
-          ></iframe>
+          <iframe id="preview" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
         </div>
       </section>
     </div>
@@ -527,25 +525,25 @@
     }
 
     function updatePreview() {
-  if (!editor) return;
+      if (!editor) return;
 
-  const code = editor.getValue();
+      const code = editor.getValue();
 
-  if (!mappingEnabled) {
-    currentSourceMap = {};
-    activeDecorations = editor.deltaDecorations(activeDecorations, []);
-    preview.srcdoc = code;
-    setStatus("已更新预览，预览定位已关闭 " + new Date().toLocaleTimeString());
-    return;
-  }
+      if (!mappingEnabled) {
+        currentSourceMap = {};
+        activeDecorations = editor.deltaDecorations(activeDecorations, []);
+        preview.srcdoc = code;
+        setStatus("已更新预览，预览定位已关闭 " + new Date().toLocaleTimeString());
+        return;
+      }
 
-  const result = instrumentHtml(code);
+      const result = instrumentHtml(code);
 
-  currentSourceMap = result.sourceMap;
-  preview.srcdoc = result.html;
+      currentSourceMap = result.sourceMap;
+      preview.srcdoc = result.html;
 
-  setStatus("已更新预览，预览定位已开启 " + new Date().toLocaleTimeString());
-}
+      setStatus("已更新预览，预览定位已开启 " + new Date().toLocaleTimeString());
+    }
 
     function jumpToSource(sourceId) {
       if (!editor || !currentSourceMap[sourceId]) return;
@@ -648,15 +646,15 @@
     });
 
     window.addEventListener("message", function (event) {
-  if (!mappingEnabled) return;
-  if (event.source !== preview.contentWindow) return;
+      if (!mappingEnabled) return;
+      if (event.source !== preview.contentWindow) return;
 
-  const data = event.data;
+      const data = event.data;
 
-  if (!data || data.type !== "preview-source-click") return;
+      if (!data || data.type !== "preview-source-click") return;
 
-  jumpToSource(data.sourceId);
-});
+      jumpToSource(data.sourceId);
+    });
 
     fileInput.addEventListener("change", function () {
       const file = this.files[0];
@@ -844,23 +842,24 @@
     });
 
     mappingToggleBtn.addEventListener("click", function () {
-    mappingEnabled = !mappingEnabled;
+      mappingEnabled = !mappingEnabled;
 
-  mappingToggleBtn.textContent = mappingEnabled
-    ? "预览定位：开"
-    : "预览定位：关";
+      mappingToggleBtn.textContent = mappingEnabled
+        ? "预览定位：开"
+        : "预览定位：关";
 
-  if (!mappingEnabled && editor) {
-    currentSourceMap = {};
-    activeDecorations = editor.deltaDecorations(activeDecorations, []);
-  }
+      if (!mappingEnabled && editor) {
+        currentSourceMap = {};
+        activeDecorations = editor.deltaDecorations(activeDecorations, []);
+      }
 
-  updatePreview();
-});
+      updatePreview();
+    });
 
     window.addEventListener("resize", function () {
       layoutEditor();
     });
   </script>
 </body>
+
 </html>
