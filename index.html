@@ -216,6 +216,7 @@
 
       <button id="downloadBtn">下载当前 HTML</button>
       <button id="formatBtn">格式化代码</button>
+      <button id="mappingToggleBtn">预览定位：开</button>
 
       <div class="collapsed-buttons">
         <button id="showEditorBtn" class="hidden">展开代码区</button>
@@ -259,6 +260,7 @@
     let editor;
     let currentSourceMap = {};
     let activeDecorations = [];
+    let mappingEnabled = true;
 
     const defaultCode = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -322,6 +324,7 @@
 
     const downloadBtn = document.getElementById("downloadBtn");
     const formatBtn = document.getElementById("formatBtn");
+    const mappingToggleBtn = document.getElementById("mappingToggleBtn");
 
     let isResizing = false;
     let lastEditorBasis = "50%";
@@ -524,16 +527,25 @@
     }
 
     function updatePreview() {
-      if (!editor) return;
+  if (!editor) return;
 
-      const code = editor.getValue();
-      const result = instrumentHtml(code);
+  const code = editor.getValue();
 
-      currentSourceMap = result.sourceMap;
-      preview.srcdoc = result.html;
+  if (!mappingEnabled) {
+    currentSourceMap = {};
+    activeDecorations = editor.deltaDecorations(activeDecorations, []);
+    preview.srcdoc = code;
+    setStatus("已更新预览，预览定位已关闭 " + new Date().toLocaleTimeString());
+    return;
+  }
 
-      setStatus("已更新预览 " + new Date().toLocaleTimeString());
-    }
+  const result = instrumentHtml(code);
+
+  currentSourceMap = result.sourceMap;
+  preview.srcdoc = result.html;
+
+  setStatus("已更新预览，预览定位已开启 " + new Date().toLocaleTimeString());
+}
 
     function jumpToSource(sourceId) {
       if (!editor || !currentSourceMap[sourceId]) return;
@@ -636,14 +648,15 @@
     });
 
     window.addEventListener("message", function (event) {
-      if (event.source !== preview.contentWindow) return;
+  if (!mappingEnabled) return;
+  if (event.source !== preview.contentWindow) return;
 
-      const data = event.data;
+  const data = event.data;
 
-      if (!data || data.type !== "preview-source-click") return;
+  if (!data || data.type !== "preview-source-click") return;
 
-      jumpToSource(data.sourceId);
-    });
+  jumpToSource(data.sourceId);
+});
 
     fileInput.addEventListener("change", function () {
       const file = this.files[0];
@@ -829,6 +842,21 @@
         console.error(err);
       }
     });
+
+    mappingToggleBtn.addEventListener("click", function () {
+    mappingEnabled = !mappingEnabled;
+
+  mappingToggleBtn.textContent = mappingEnabled
+    ? "预览定位：开"
+    : "预览定位：关";
+
+  if (!mappingEnabled && editor) {
+    currentSourceMap = {};
+    activeDecorations = editor.deltaDecorations(activeDecorations, []);
+  }
+
+  updatePreview();
+});
 
     window.addEventListener("resize", function () {
       layoutEditor();
